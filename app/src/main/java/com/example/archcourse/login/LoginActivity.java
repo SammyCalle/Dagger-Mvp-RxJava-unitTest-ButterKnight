@@ -18,6 +18,15 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,13 +60,16 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             }
         });
 
-        Call<Twitch> call = twitchAPI.getTopGames("s0706njscdfxi5hv7xoplpimt8cul8");
+        Call<Twitch> call = twitchAPI.getGameById("s0706njscdfxi5hv7xoplpimt8cul8",493057);
         call.enqueue(new Callback<Twitch>() {
             @Override
             public void onResponse(Call<Twitch> call, Response<Twitch> response) {
                 List<Game> topGames = response.body().getData();
                 for (Game game: topGames){
+                    System.out.println("Inicio de prueba GET + Paramaters");
+                    System.out.println(game.getBoxArtUrl());
                     System.out.println(game.getName());
+                    System.out.println("Fin de prueba GET + Paramaters");
                 }
 
             }
@@ -67,7 +79,51 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                 t.printStackTrace();
             }
         });
+
+        twitchAPI.getTopGamesObsevable("s0706njscdfxi5hv7xoplpimt8cul8")
+                .flatMap(new Function<Twitch, Observable<Game>>() {
+                    @Override
+                    public Observable<Game> apply(Twitch twitch) throws Exception {
+                        return Observable.fromIterable(twitch.getData());
+                    }
+                })
+                .flatMap(new Function<Game, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(Game game) throws Exception {
+                        return Observable.just(game.getName());
+                    }
+                })
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return s.startsWith("W")||s.startsWith("w");
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(String s) {
+                        System.out.println("RxJava says: "+s);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
+
 
     @Override
     protected void onResume() {
