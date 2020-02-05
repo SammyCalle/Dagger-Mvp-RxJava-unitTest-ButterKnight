@@ -13,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class TwitchModule {
 
-    public final String BASE_URL = "http://api.twitch.tv/helix/";
+    public final String BASE_URL = "https://api.twitch.tv/helix/";
 
     @Provides
     public OkHttpClient proOkHttpClient(){

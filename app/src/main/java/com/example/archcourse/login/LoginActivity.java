@@ -3,6 +3,7 @@ package com.example.archcourse.login;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.AndroidException;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -10,10 +11,11 @@ import android.widget.Toast;
 
 import com.example.archcourse.R;
 import com.example.archcourse.http.TwitchAPI;
-import com.example.archcourse.http.twitch.Game;
-import com.example.archcourse.http.twitch.Twitch;
+import com.example.archcourse.http.twitch.Data;
+import com.example.archcourse.http.twitch.Streams2;
 import com.example.archcourse.root.App;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -27,9 +29,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity implements LoginActivityMVP.View{
 
@@ -60,16 +59,76 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             }
         });
 
-        Call<Twitch> call = twitchAPI.getGameById("s0706njscdfxi5hv7xoplpimt8cul8",493057);
+        twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8")
+                .flatMap(new Function<Streams2, Observable<Streams2>>() {
+                    @Override
+                    public Observable<Streams2> apply(Streams2 streams2) throws Exception {
+                        return Observable.fromArray(streams2);
+                    }
+                })
+                .filter()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Streams2>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Streams2 streams2) {
+                        List<Data> streams = streams2.getData();
+                        List<String> tags = streams2.getTag_ids();
+                        for (Data stream: streams){
+                            System.out.println("Inicio de prueba GET + Streams");
+                            System.out.println(stream.getTitle());
+                            System.out.println(stream.getLanguage());
+                            System.out.println(stream.getViewer_count());
+                            System.out.println(tags);
+                            System.out.println("Fin de prueba GET + Streams");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+//        Observable<Streams2> call = twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8");
+//
+//            @Override
+//            public void onResponse(Call<Streams2> call, Response<Streams2> response) {
+//                List<Data> streams = response.body().getData();
+//                List<String> tags = response.body().getTag_ids();
+//                for (Data stream: streams){
+//                    System.out.println("Inicio de prueba GET + Streams");
+//                    System.out.println(stream.getTitle());
+//                    System.out.println(stream.getLanguage());
+//                    System.out.println(stream.getViewer_count());
+//                    System.out.println(tags);
+//                    System.out.println("Fin de prueba GET + Streams");
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Streams2> call, Throwable t) {
+//
+//            }
+//        });
+
+       /* Call<Twitch> call = twitchAPI.getGameById("s0706njscdfxi5hv7xoplpimt8cul8",493057);
         call.enqueue(new Callback<Twitch>() {
             @Override
             public void onResponse(Call<Twitch> call, Response<Twitch> response) {
                 List<Game> topGames = response.body().getData();
                 for (Game game: topGames){
-                    System.out.println("Inicio de prueba GET + Paramaters");
-                    System.out.println(game.getBoxArtUrl());
-                    System.out.println(game.getName());
-                    System.out.println("Fin de prueba GET + Paramaters");
+
                 }
 
             }
@@ -121,7 +180,7 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                     public void onComplete() {
 
                     }
-                });
+                });*/
     }
 
 

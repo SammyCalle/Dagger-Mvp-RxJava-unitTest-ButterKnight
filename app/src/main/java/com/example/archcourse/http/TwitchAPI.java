@@ -1,5 +1,6 @@
 package com.example.archcourse.http;
 
+import com.example.archcourse.http.twitch.Streams2;
 import com.example.archcourse.http.twitch.Twitch;
 
 import io.reactivex.Observable;
@@ -19,5 +20,8 @@ public interface TwitchAPI {
 
     @GET("games")
     Call<Twitch> getGameById(@Header("Client-Id") String clientId, @Query("id") int id);
+
+    @GET("streams")
+    Observable<Streams2> getStreams(@Header("Client-Id") String clientId);
 
 }
