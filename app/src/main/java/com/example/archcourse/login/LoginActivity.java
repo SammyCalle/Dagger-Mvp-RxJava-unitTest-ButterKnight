@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.AndroidException;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,7 +13,9 @@ import android.widget.Toast;
 import com.example.archcourse.R;
 import com.example.archcourse.http.TwitchAPI;
 import com.example.archcourse.http.twitch.Data;
+import com.example.archcourse.http.twitch.Game;
 import com.example.archcourse.http.twitch.Streams2;
+import com.example.archcourse.http.twitch.Twitch;
 import com.example.archcourse.root.App;
 
 import java.util.ArrayList;
@@ -51,7 +54,6 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
         firstName = findViewById(R.id.firstName);
         lastName = findViewById(R.id.lastName);
         loginButton = findViewById(R.id.loginButton);
-
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -59,36 +61,47 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             }
         });
 
+//        List<Streams2> EspañolLista = new ArrayList<>();
+//        EspañolLista = twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8")
+//        twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8")
+//                .flatMap(new Function<Streams2, Observable<Streams2>>() {
+//                    @Override
+//                    public Observable<Streams2> apply(Streams2 streams2) throws Exception {
+//                        return Observable.fromArray(streams2);
+//                    }
+//                })
+//                .flatMap(Observable.fromIterable(twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8")))
         twitchAPI.getStreams("s0706njscdfxi5hv7xoplpimt8cul8")
-                .flatMap(new Function<Streams2, Observable<Streams2>>() {
+                .flatMap(new Function<Streams2, Observable<Data>>() {
                     @Override
-                    public Observable<Streams2> apply(Streams2 streams2) throws Exception {
-                        return Observable.fromArray(streams2);
+                    public Observable<Data> apply(Streams2 streams2) throws Exception {
+                        return Observable.fromIterable(streams2.getData());
                     }
                 })
-                .filter()
+                .filter(new Predicate<Data>() {
+                    @Override
+                    public boolean test(Data data) throws Exception {
+                        return data.getLanguage().contains("en")&& Integer.parseInt(data.getViewer_count()) > 10000;
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Streams2>() {
+                .subscribe(new Observer<Data>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(Streams2 streams2) {
-                        List<Data> streams = streams2.getData();
-                        List<String> tags = streams2.getTag_ids();
-                        for (Data stream: streams){
-                            System.out.println("Inicio de prueba GET + Streams");
-                            System.out.println(stream.getTitle());
-                            System.out.println(stream.getLanguage());
-                            System.out.println(stream.getViewer_count());
-                            System.out.println(tags);
-                            System.out.println("Fin de prueba GET + Streams");
+                    public void onNext(Data data) {
+//                            System.out.println("Inicio de prueba GET + Streams");
+//                            System.out.println(data.getTitle());
+//                            System.out.println(data.getLanguage());
+//                            System.out.println(data.getViewer_count());
+//                            System.out.println(data.getUser_name());
+//                            System.out.println("Fin de prueba GET + Streams");
+                        getGamesbyId(data.getGame_id());
                         }
-                    }
-
                     @Override
                     public void onError(Throwable e) {
 
@@ -183,6 +196,37 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                 });*/
     }
 
+    private void getGamesbyId(String game_id) {
+        twitchAPI.getGameById("s0706njscdfxi5hv7xoplpimt8cul8",Integer.parseInt(game_id))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Twitch>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Twitch twitch) {
+                        List<Game> games = twitch.getData();
+                        for (Game juegos : games){
+                            System.out.println("El Nombre del juego es");
+                            System.out.println(juegos.getName());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+    }
 
     @Override
     protected void onResume() {

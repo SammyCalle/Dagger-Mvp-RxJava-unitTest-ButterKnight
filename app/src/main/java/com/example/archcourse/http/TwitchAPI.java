@@ -19,7 +19,7 @@ public interface TwitchAPI {
     Observable<Twitch> getTopGamesObsevable(@Header("Client-Id") String clientId);
 
     @GET("games")
-    Call<Twitch> getGameById(@Header("Client-Id") String clientId, @Query("id") int id);
+    Observable<Twitch> getGameById(@Header("Client-Id") String clientId, @Query("id") int id);
 
     @GET("streams")
     Observable<Streams2> getStreams(@Header("Client-Id") String clientId);
